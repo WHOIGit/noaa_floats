@@ -13,6 +13,6 @@ formdata = {
     'low_pressure': low_pressure,
     'high_pressure': high_pressure
 }
-r = requests.post(BASE_URL+'/query',data=formdata,stream=True)
+r = requests.get(BASE_URL+'/query.csv',params=formdata,stream=True)
 for line in r.iter_lines():
     print line

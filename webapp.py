@@ -10,14 +10,14 @@ app = Flask(__name__)
 def index():
     return Response('<h1>Hello, world.</h1>',mimetype='text/html')
 
-@app.route('/query.csv',methods=['POST'])
+@app.route('/query.csv')
 def query():
-    left = float(request.form.get('left',-180))
-    bottom = float(request.form.get('bottom',-90))
-    right = float(request.form.get('right',180))
-    top = float(request.form.get('top',90))
-    low_pressure = float(request.form.get('low_pressure',0))
-    high_pressure = float(request.form.get('high_pressure',9999))
+    left = float(request.args.get('left',-180))
+    bottom = float(request.args.get('bottom',-90))
+    right = float(request.args.get('right',180))
+    top = float(request.args.get('top',90))
+    low_pressure = float(request.args.get('low_pressure',0))
+    high_pressure = float(request.args.get('high_pressure',9999))
     def line_generator():
         for line in query_data(left,bottom,right,top,low_pressure,high_pressure):
             yield line + '\n'
