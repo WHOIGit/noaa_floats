@@ -56,13 +56,14 @@ dragBox.on('boxend', function(e) {
       geometry: dragBox.getGeometry(),
       name: 'a drag box'
     });
+    featureOverlay.getFeatures().clear();
     featureOverlay.addFeature(feature);
     var params = {
 	left: latLonExtent[0],
 	bottom: latLonExtent[1],
 	right: latLonExtent[2],
 	top: latLonExtent[3]
-    };
+    };//FIXME add pressure
     var paramString = $.param(params)
     var csv_url = '/query.csv?' + paramString
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
