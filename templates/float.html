@@ -1,0 +1,22 @@
+{% extends "master.html" %}
+{% block title %} Float {{float_id}} {% endblock %}
+{% block head %}
+    <style>
+    .map {
+      height: 100%;
+      width: 100%;
+      background-color: #b5d0d0;
+    }
+    </style>
+{% endblock %}
+{% block body %}
+    <h2>Float {{float_id}}</h>
+    <div id="metadata"></div>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+var map = create_map('map');
+var overlay = create_overlay(map);
+draw_track({{float_id}},overlay);
+    </script>
+{% endblock %}
+
