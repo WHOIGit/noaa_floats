@@ -2,9 +2,6 @@
 var map = create_map('map');
 var featureOverlay = create_overlay(map);
 
-// demo
-draw_track(10200910, featureOverlay);
-
 // a DragBox interaction used to select features by drawing boxes
 var dragBox = new ol.interaction.DragBox({
     condition: ol.events.condition.shiftKeyOnly,
