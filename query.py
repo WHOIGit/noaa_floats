@@ -39,6 +39,9 @@ def get_metadata(float_id):
     df = read_csv('data/floats_dirfl.dat',sep='\t\s*',index_col=False)
     for index, row in df[df.ID == int(float_id)].iterrows():
         d = dict((c,row[c]) for c in METADATA_COLS)
+        # deal with funky keys
         split_key(d,'1st_DATE  1st_LAT  1st_LON ','  ',['START_DATE','START_LAT','START_LON'])
         split_key(d,'END_DATE  END_LAT  END_LON','  ')
+        for k in ['START_LAT','END_LAT','START_LON','END_LON']:
+            d[k] = float(d[k])
         return d

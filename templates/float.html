@@ -16,6 +16,11 @@
     <script type="text/javascript">
 var map = create_map('map');
 var overlay = create_overlay(map);
+$.getJSON('/metadata/{{float_id}}', function(r) {
+    $('#metadata').html('<pre>'+JSON.stringify(r)+'</pre>');
+    map.getView().setCenter(ol.proj.transform
+       ([r.START_LON, r.START_LAT], 'EPSG:4326', 'EPSG:3857'));
+});
 draw_track({{float_id}},overlay);
     </script>
 {% endblock %}

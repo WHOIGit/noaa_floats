@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request
 from flask import render_template
 
-from query import query_data, get_track
+from query import query_data, get_track, get_metadata
 
 app = Flask(__name__)
 
@@ -30,10 +30,16 @@ def serve_track(float_id):
     track = get_track(float_id)
     return Response(json.dumps(track),mimetype='application/json')
 
+@app.route('/metadata/<int:float_id>')
+def serve_metadata(float_id):
+    d = get_metadata(float_id)
+    return Response(json.dumps(d),mimetype='application/json')
+
 @app.route('/float/<int:float_id>')
 def float_page(float_id):
     context = {
-        'float_id': float_id
+        'float_id': float_id,
+        'metadata': get_metadata(float_id)
     }
     rendered = render_template('float.html',**context)
     return Response(rendered, mimetype='text/html')
