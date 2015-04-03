@@ -35,6 +35,17 @@ var featureOverlay = new ol.FeatureOverlay({
 });
 featureOverlay.setMap(map);
 
+// now get a track and draw it
+$.getJSON('/track/10200901', function(points) {
+    var geom = new ol.geom.LineString(points);
+    var xf = ol.proj.getTransform('EPSG:4326', 'EPSG:3857');
+    geom.applyTransform(xf);
+    var feature = new ol.Feature({
+	geometry: geom,
+	name: '10200901'
+    });
+    featureOverlay.addFeature(feature);
+});
 
 // a DragBox interaction used to select features by drawing boxes
 var dragBox = new ol.interaction.DragBox({

@@ -16,3 +16,13 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
         if len(df.index) > 0:
             for index, row in df.iterrows():
                 yield ','.join(map(str,[row[c] for c in COLS]))
+
+def get_track(float_id):
+    track = []
+    float_id = int(float_id)
+    for chunk in read_csv('./data/floats.dat',sep='\s+',iterator=True,chunksize=CHUNK_SIZE):
+        df = chunk[chunk.ID == float_id]
+        if len(df.index) > 0:
+            for index, row in df.iterrows():
+                track.append((float(row.LON),float(row.LAT)));
+    return track
