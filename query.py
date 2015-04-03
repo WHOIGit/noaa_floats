@@ -35,6 +35,7 @@ def split_key(d,key,regex,new_keys=None):
         d[k] = v
     del d[key]
 
+# \b(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])
 def get_metadata(float_id):
     df = read_csv('data/floats_dirfl.dat',sep='\t\s*',index_col=False)
     for index, row in df[df.ID == int(float_id)].iterrows():

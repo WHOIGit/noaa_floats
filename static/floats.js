@@ -45,9 +45,8 @@ function draw_track(float_id, featureOverlay) {
 	geom.applyTransform(xf);
 	var feature = new ol.Feature({
 	    geometry: geom,
-	    name: '10200901'
+	    name: ''+float_id
 	});
 	featureOverlay.addFeature(feature);
     });
 }
-
