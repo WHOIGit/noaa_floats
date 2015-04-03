@@ -2,25 +2,46 @@
 {% block title %} Float {{float_id}} {% endblock %}
 {% block head %}
     <style>
+    #wrap {
+      width: 1024px;
+      margin: 0 auto;
+    }
+    .metadata {
+      font-size: 10pt;
+      float: left;
+      width: 220px;
+    }
     .map {
-      height: 100%;
-      width: 100%;
+      float: right;
+      width: 800px;
+      height: 600px;
       background-color: #b5d0d0;
+    }
+    .footer {
+      clear: both;
+      text-align: center;
     }
     </style>
 {% endblock %}
 {% block body %}
-    <h2>Float {{float_id}}</h>
-    <div id="metadata"></div>
-    <div id="map" class="map"></div>
+    <h2>Float {{float_id}}</h2>
+    <div id="wrap">
+      <div id="metadata" class="metadata">
+        <dl>
+          {% for k,v in metadata.iteritems() %}
+          <dt>{{k}}</dt>
+          <dd>{{v}}</dd>
+          {% endfor %}
+        </dl> 
+      </div>
+      <div id="map" class="map"></div>
+    </div>
+    <div class="footer">footer</div>
     <script type="text/javascript">
 var map = create_map('map');
 var overlay = create_overlay(map);
-$.getJSON('/metadata/{{float_id}}', function(r) {
-    $('#metadata').html('<pre>'+JSON.stringify(r)+'</pre>');
-    map.getView().setCenter(ol.proj.transform
-       ([r.START_LON, r.START_LAT], 'EPSG:4326', 'EPSG:3857'));
-});
+map.getView().setCenter(ol.proj.transform
+  ([{{metadata['START_LON']}}, {{metadata['START_LAT']}}], 'EPSG:4326', 'EPSG:3857'));
 draw_track({{float_id}},overlay);
     </script>
 {% endblock %}
