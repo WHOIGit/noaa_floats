@@ -1,51 +1,9 @@
-var mqLayer = new ol.layer.Tile({
-    source: new ol.source.MapQuest({layer:'sat'})
-});
-var woho = ol.proj.transform([-70.661810, 41.526994], 'EPSG:4326', 'EPSG:3857');
-var aView = new ol.View({
-    center: woho,
-    zoom: 4
-});
-var map = new ol.Map({
-    target: 'map'
-});
-map.addLayer(mqLayer);
-map.setView(aView);
+// using functions from floats.js
+var map = create_map('map');
+var featureOverlay = create_overlay(map);
 
-// The features are not added to a regular vector layer/source,
-// but to a feature overlay which holds a collection of features.
-// This collection is passed to the modify and also the draw
-// interaction, so that both can add or modify features.
-var featureOverlay = new ol.FeatureOverlay({
-  style: new ol.style.Style({
-    fill: new ol.style.Fill({
-      color: 'rgba(255, 255, 255, 0.2)'
-    }),
-    stroke: new ol.style.Stroke({
-      color: '#ffcc33',
-      width: 2
-    }),
-    image: new ol.style.Circle({
-      radius: 7,
-      fill: new ol.style.Fill({
-        color: '#ffcc33'
-      })
-    })
-  })
-});
-featureOverlay.setMap(map);
-
-// now get a track and draw it
-$.getJSON('/track/10200901', function(points) {
-    var geom = new ol.geom.LineString(points);
-    var xf = ol.proj.getTransform('EPSG:4326', 'EPSG:3857');
-    geom.applyTransform(xf);
-    var feature = new ol.Feature({
-	geometry: geom,
-	name: '10200901'
-    });
-    featureOverlay.addFeature(feature);
-});
+// demo
+draw_track(10200910, featureOverlay);
 
 // a DragBox interaction used to select features by drawing boxes
 var dragBox = new ol.interaction.DragBox({
@@ -59,6 +17,10 @@ var dragBox = new ol.interaction.DragBox({
 
 map.addInteraction(dragBox);
 
+dragBox.on('boxstart', function(e) {
+    featureOverlay.getFeatures().clear();
+    $('#download').empty();
+});
 dragBox.on('boxend', function(e) {
     var extent = dragBox.getGeometry().getExtent();
     latLonExtent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
@@ -67,7 +29,6 @@ dragBox.on('boxend', function(e) {
       geometry: dragBox.getGeometry(),
       name: 'a drag box'
     });
-    featureOverlay.getFeatures().clear();
     featureOverlay.addFeature(feature);
     var params = {
 	left: latLonExtent[0],

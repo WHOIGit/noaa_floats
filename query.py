@@ -2,10 +2,11 @@ from pandas import read_csv
 
 CHUNK_SIZE=1000
 
-COLS='ID DATE TIME LAT LON PRESS U V TEMP Q_TIME Q_POS Q_PRESS Q_VEL Q_TEMP'.split(' ')
+DATA_COLS='ID,DATE,TIME,LAT,LON,PRESS,U,V,TEMP,Q_TIME,Q_POS,Q_PRESS,Q_VEL,Q_TEMP'.split(',')
+METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE  1st_LAT  1st_LON ,END_DATE  END_LAT  END_LON,TYPE,FILENAME'.split(',')
 
 def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
-    yield ','.join(COLS)
+    yield ','.join(DATA_COLS)
     for chunk in read_csv('./data/floats.dat',sep='\s+',iterator=True,chunksize=CHUNK_SIZE):
         df = chunk[(chunk.LON > left) &
                    (chunk.LON < right) &
@@ -15,7 +16,7 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                    (chunk.PRESS < high_pressure)]
         if len(df.index) > 0:
             for index, row in df.iterrows():
-                yield ','.join(map(str,[row[c] for c in COLS]))
+                yield ','.join(map(str,[row[c] for c in DATA_COLS]))
 
 def get_track(float_id):
     track = []
@@ -26,3 +27,18 @@ def get_track(float_id):
             for index, row in df.iterrows():
                 track.append((float(row.LON),float(row.LAT)));
     return track
+
+def split_key(d,key,regex,new_keys=None):
+    if new_keys is None:
+        new_keys = key.split(regex)
+    for k,v in zip(new_keys,d[key].split(regex)):
+        d[k] = v
+    del d[key]
+
+def get_metadata(float_id):
+    df = read_csv('data/floats_dirfl.dat',sep='\t\s*',index_col=False)
+    for index, row in df[df.ID == int(float_id)].iterrows():
+        d = dict((c,row[c]) for c in METADATA_COLS)
+        split_key(d,'1st_DATE  1st_LAT  1st_LON ','  ',['START_DATE','START_LAT','START_LON'])
+        split_key(d,'END_DATE  END_LAT  END_LON','  ')
+        return d

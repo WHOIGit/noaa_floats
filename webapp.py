@@ -1,6 +1,7 @@
 import json
 
 from flask import Flask, Response, request
+from flask import render_template
 
 from query import query_data, get_track
 
@@ -8,7 +9,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return Response('<h1>Hello, world.</h1>',mimetype='text/html')
+    rendered = render_template('drag_demo.html')
+    return Response(rendered, mimetype='text/html')
 
 @app.route('/query.csv')
 def serve_query_csv():
@@ -27,6 +29,14 @@ def serve_query_csv():
 def serve_track(float_id):
     track = get_track(float_id)
     return Response(json.dumps(track),mimetype='application/json')
+
+@app.route('/float/<int:float_id>')
+def float_page(float_id):
+    context = {
+        'float_id': float_id
+    }
+    rendered = render_template('float.html',**context)
+    return Response(rendered, mimetype='text/html')
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=8080,debug=True)
