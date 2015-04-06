@@ -14,6 +14,18 @@ var dragBox = new ol.interaction.DragBox({
 
 map.addInteraction(dragBox);
 
+// validate pressure inputs
+$('#low_pressure').on('change paste', function() {
+    if(isNaN($('#low_pressure').val())) {
+	$('#low_pressure').val('0');
+    }
+});
+$('#high_pressure').on('change paste', function() {
+    if(isNaN($('#high_pressure').val())) {
+	$('#high_pressure').val('9999');
+    }
+});
+
 dragBox.on('boxstart', function(e) {
     featureOverlay.getFeatures().clear();
     $('#download').empty();
@@ -24,16 +36,19 @@ dragBox.on('boxend', function(e) {
     console.log(latLonExtent);
     var feature = new ol.Feature({
       geometry: dragBox.getGeometry(),
-      name: 'a drag box'
     });
     featureOverlay.addFeature(feature);
+    var low_pressure = Number($('#low_pressure').val());
+    var high_pressure = Number($('#high_pressure').val());
     var params = {
 	left: latLonExtent[0],
 	bottom: latLonExtent[1],
 	right: latLonExtent[2],
-	top: latLonExtent[3]
-    };//FIXME add pressure
-    var paramString = $.param(params)
+	top: latLonExtent[3],
+	low_pressure: low_pressure,
+	high_pressure: high_pressure
+    };
+    var paramString = $.param(params);
     var csv_url = '/query.csv?' + paramString
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
 });
