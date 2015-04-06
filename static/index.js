@@ -14,30 +14,10 @@ var dragBox = new ol.interaction.DragBox({
 
 map.addInteraction(dragBox);
 
-// validate pressure inputs
-$('#low_pressure').on('change paste', function() {
-    if(isNaN($('#low_pressure').val())) {
-	$('#low_pressure').val('0');
-    }
-});
-$('#high_pressure').on('change paste', function() {
-    if(isNaN($('#high_pressure').val())) {
-	$('#high_pressure').val('9999');
-    }
-});
-
-dragBox.on('boxstart', function(e) {
-    featureOverlay.getFeatures().clear();
-    $('#download').empty();
-});
-dragBox.on('boxend', function(e) {
+function create_csv_link() {
     var extent = dragBox.getGeometry().getExtent();
     latLonExtent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
     console.log(latLonExtent);
-    var feature = new ol.Feature({
-      geometry: dragBox.getGeometry(),
-    });
-    featureOverlay.addFeature(feature);
     var low_pressure = Number($('#low_pressure').val());
     var high_pressure = Number($('#high_pressure').val());
     var params = {
@@ -51,4 +31,31 @@ dragBox.on('boxend', function(e) {
     var paramString = $.param(params);
     var csv_url = '/query.csv?' + paramString
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
+}
+
+// validate pressure inputs
+$('#low_pressure').on('change paste', function() {
+    if(isNaN($('#low_pressure').val())) {
+	$('#low_pressure').val('0');
+    }
+    create_csv_link();
+});
+$('#high_pressure').on('change paste', function() {
+    if(isNaN($('#high_pressure').val())) {
+	$('#high_pressure').val('9999');
+    }
+    create_csv_link();
+});
+
+
+dragBox.on('boxstart', function(e) {
+    featureOverlay.getFeatures().clear();
+    $('#download').empty();
+});
+dragBox.on('boxend', function(e) {
+    var feature = new ol.Feature({
+      geometry: dragBox.getGeometry(),
+    });
+    featureOverlay.addFeature(feature);
+    create_csv_link();
 });
