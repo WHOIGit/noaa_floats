@@ -28,9 +28,9 @@
     <div id="wrap">
       <div id="metadata" class="metadata">
         <dl>
-          {% for k,v in metadata.iteritems() %}
+          {% for k in metadata_cols %}
           <dt>{{k}}</dt>
-          <dd>{{v}}</dd>
+          <dd>{{metadata[k]}}</dd>
           {% endfor %}
         </dl> 
       </div>
@@ -41,7 +41,7 @@
 var map = create_map('map');
 var overlay = create_overlay(map);
 map.getView().setCenter(ol.proj.transform
-  ([{{metadata['START_LON']}}, {{metadata['START_LAT']}}], 'EPSG:4326', 'EPSG:3857'));
+  ([{{metadata['1st_LON']}}, {{metadata['1st_LAT']}}], 'EPSG:4326', 'EPSG:3857'));
 draw_track({{float_id}},overlay);
     </script>
 {% endblock %}

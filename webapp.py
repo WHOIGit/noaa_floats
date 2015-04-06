@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request
 from flask import render_template
 
-from query import query_data, get_track, get_metadata
+from query import query_data, get_track, get_metadata, METADATA_COLS
 
 app = Flask(__name__)
 
@@ -39,6 +39,7 @@ def serve_metadata(float_id):
 def float_page(float_id):
     context = {
         'float_id': float_id,
+        'metadata_cols': METADATA_COLS,
         'metadata': get_metadata(float_id)
     }
     rendered = render_template('float.html',**context)
