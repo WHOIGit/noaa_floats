@@ -17,7 +17,6 @@ map.addInteraction(dragBox);
 function create_csv_link() {
     var extent = dragBox.getGeometry().getExtent();
     latLonExtent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
-    console.log(latLonExtent);
     var low_pressure = Number($('#low_pressure').val());
     var high_pressure = Number($('#high_pressure').val());
     var params = {
@@ -28,6 +27,7 @@ function create_csv_link() {
 	low_pressure: low_pressure,
 	high_pressure: high_pressure
     };
+    console.log(latLonExtent + ' ' + low_pressure + ' ' + high_pressure);
     var paramString = $.param(params);
     var csv_url = '/query.csv?' + paramString
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
