@@ -1,15 +1,16 @@
 import json
 
-from flask import Flask, Response, request
+from flask import Flask, Response, request, redirect, url_for
 from flask import render_template
 
 from query import query_data, get_track, get_metadata, METADATA_COLS
+from query import choose_random_float
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    rendered = render_template('drag_demo.html')
+    rendered = render_template('top.html')
     return Response(rendered, mimetype='text/html')
 
 @app.route('/query.csv')
@@ -44,6 +45,11 @@ def float_page(float_id):
     }
     rendered = render_template('float.html',**context)
     return Response(rendered, mimetype='text/html')
+
+@app.route('/random_float')
+def random_float_page():
+    float_id = choose_random_float()
+    return redirect(url_for('float_page',float_id=float_id))
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=8080,debug=True)
