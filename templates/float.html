@@ -36,7 +36,7 @@
       </div>
       <div id="map" class="map"></div>
     </div>
-    <div class="footer">footer</div>
+    <div class="footer">footer <a href="/random_float">random</a></div>
     <script type="text/javascript">
 var map = create_map('map');
 var overlay = create_overlay(map);
@@ -45,4 +45,3 @@ map.getView().setCenter(ol.proj.transform
 draw_track({{float_id}},overlay);
     </script>
 {% endblock %}
-
