@@ -23,6 +23,23 @@ class Float(Base):
     def __repr__(self):
         return '<Float #%d>' % (self.id)
 
+    def get_metadata(self):
+        return {
+            'ID': self.id,
+            'PRINCIPAL_INVESTIGATOR': self.pi,
+            'ORGANIZATION': self.organization,
+            'EXPERIMENT': self.experiment,
+            '1st_DATE': self.start_date,
+            '1st_LAT': self.start_lat,
+            '1st_LON': self.start_lon,
+            'END_DATE': self.end_date,
+            'END_LAT': self.end_lat,
+            'END_LON': self.end_lon,
+            'TYPE': self.type,
+            'FILENAME': self.filename
+        }
+
+
 class Point(Base):
     __tablename__ = 'points'
 

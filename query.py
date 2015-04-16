@@ -2,8 +2,8 @@ import numpy as np
 from pandas import read_csv
 from sqlalchemy.sql.expression import func
 
-from utils import xa
-from orm import Float
+from utils import xa, render_date, render_time
+from orm import Float, Point
 from etl import DATABASE_URL
 
 CHUNK_SIZE=10000
@@ -16,16 +16,30 @@ METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
 def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     yield ','.join(DATA_COLS)
-    for chunk in read_csv('./data/floats.dat',sep=DATA_SEPARATOR,iterator=True,chunksize=CHUNK_SIZE):
-        df = chunk[(chunk.LON > left) &
-                   (chunk.LON < right) &
-                   (chunk.LAT > bottom) &
-                   (chunk.LAT < top) &
-                   (chunk.PRESS > low_pressure) &
-                   (chunk.PRESS < high_pressure)]
-        if len(df.index) > 0:
-            for index, row in df.iterrows():
-                yield ','.join(map(str,[row[c] for c in DATA_COLS]))
+    with xa(DATABASE_URL) as session:
+        for p in session.query(Point).\
+            filter(Point.lon > left).\
+            filter(Point.lon < right).\
+            filter(Point.lat > bottom).\
+            filter(Point.lat < top).\
+            filter(Point.pressure > low_pressure).\
+            filter(Point.pressure < high_pressure):
+            yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
+                p.id,
+                render_date(p.date),
+                render_time(p.date),
+                p.lat,
+                p.lon,
+                p.pressure,
+                p.u,
+                p.v,
+                p.temperature,
+                p.q_time,
+                p.q_pos,
+                p.q_press,
+                p.q_vel,
+                p.q_temp
+                )
 
 def get_track(float_id):
     track = []
@@ -33,27 +47,16 @@ def get_track(float_id):
     with xa(DATABASE_URL) as session:
         for f in session.query(Float).filter(Float.id==float_id):
             for p in f.points:
-                track.append((float(p.lon), float(p.lat)))
+                lon = float(p.lon)
+                lat = float(p.lat)
+                track.append((lon, lat))
         return track
     return None
 
 def get_metadata(float_id):
     with xa(DATABASE_URL) as session:
         for f in session.query(Float).filter(Float.id==float_id):
-            return {
-                'ID': f.id,
-                'PRINCIPAL_INVESTIGATOR': f.pi,
-                'ORGANIZATION': f.organization,
-                'EXPERIMENT': f.experiment,
-                '1st_DATE': f.start_date,
-                '1st_LAT': f.start_lat,
-                '1st_LON': f.start_lon,
-                'END_DATE': f.end_date,
-                'END_LAT': f.end_lat,
-                'END_LON': f.end_lon,
-                'TYPE': f.type,
-                'FILENAME': f.filename
-            }
+            return f.get_metadata()
     return {}
 
 # debug utilities

@@ -8,6 +8,12 @@ def parse_date_time(date, time):
     dt = '%s %s' % (date, time)
     return datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
 
+def render_date(dt):
+    return dt.strftime('%Y-%m-%d')
+
+def render_time(dt):
+    return dt.strftime('%H:%M:%S')
+
 @contextmanager
 def xa(db_url, metadata=None):
     """Provide a transactional scope around a series of operations."""
