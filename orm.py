@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, Numeric, DateTime
+from sqlalchemy import Column, String, Integer, BigInteger, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import backref, relationship
 
 Base = declarative_base()
@@ -7,8 +7,9 @@ Base = declarative_base()
 class Float(Base):
     __tablename__ = 'floats'
 
-    id = Column(Integer, primary_key=True) # ID
+    id = Column(BigInteger, primary_key=True) # ID
     pi = Column(String) # PRINCIPAL_INVESTIGATOR
+    organization = Column(String) # ORGANIZATION
     experiment = Column(String) # EXPERIMENT
     start_date = Column(DateTime) # 1st_DATE
     start_lat = Column(Numeric) # 1st_LAT
@@ -22,7 +23,8 @@ class Float(Base):
 class Point(Base):
     __tablename__ = 'points'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
+    float_id = Column(BigInteger, ForeignKey('floats.id'))
     date = Column(DateTime) # DATE, TIME
     lat = Column(Numeric)
     lon = Column(Numeric)

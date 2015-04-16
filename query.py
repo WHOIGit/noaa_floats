@@ -7,7 +7,7 @@ DATA_COLS='ID,DATE,TIME,LAT,LON,PRESS,U,V,TEMP,Q_TIME,Q_POS,Q_PRESS,Q_VEL,Q_TEMP
 METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LAT,1st_LON,END_DATE,END_LAT,END_LON,TYPE,FILENAME'.split(',')
 
 DATA_SEPARATOR=r'\s+'
-METADATA_SEPARATOR=r'\b(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
+METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
 def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     yield ','.join(DATA_COLS)
@@ -33,7 +33,7 @@ def get_track(float_id):
     return track
 
 def get_metadata(float_id):
-    df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
+   df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
     for index, row in df[df.ID == int(float_id)].iterrows():
         r = dict((c,row[c]) for c in METADATA_COLS)
         return r
