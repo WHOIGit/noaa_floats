@@ -20,6 +20,9 @@ class Float(Base):
     type = Column(String) # TYPE
     filename = Column(String) # FILENAME
 
+    def __repr__(self):
+        return '<Float #%d>' % (self.id)
+
 class Point(Base):
     __tablename__ = 'points'
 
@@ -40,3 +43,6 @@ class Point(Base):
 
     float = relationship('Float',
                          backref=backref('points', cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return '<Point %.4f %.4f %.2f>' % (self.lat, self.lon, self.pressure)

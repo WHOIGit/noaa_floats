@@ -1,5 +1,10 @@
 import numpy as np
 from pandas import read_csv
+from sqlalchemy.sql.expression import func
+
+from utils import xa
+from orm import Float
+from etl import DATABASE_URL
 
 CHUNK_SIZE=10000
 
@@ -25,23 +30,38 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
 def get_track(float_id):
     track = []
     float_id = int(float_id)
-    for chunk in read_csv('./data/floats.dat',sep=DATA_SEPARATOR,iterator=True,chunksize=CHUNK_SIZE):
-        df = chunk[chunk.ID == float_id]
-        if len(df.index) > 0:
-            for index, row in df.iterrows():
-                track.append((float(row.LON),float(row.LAT)));
-    return track
+    with xa(DATABASE_URL) as session:
+        for f in session.query(Float).filter(Float.id==float_id):
+            for p in f.points:
+                track.append((float(p.lon), float(p.lat)))
+        return track
+    return None
 
 def get_metadata(float_id):
-   df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
-    for index, row in df[df.ID == int(float_id)].iterrows():
-        r = dict((c,row[c]) for c in METADATA_COLS)
-        return r
+    with xa(DATABASE_URL) as session:
+        for f in session.query(Float).filter(Float.id==float_id):
+            return {
+                'ID': f.id,
+                'PRINCIPAL_INVESTIGATOR': f.pi,
+                'ORGANIZATION': f.organization,
+                'EXPERIMENT': f.experiment,
+                '1st_DATE': f.start_date,
+                '1st_LAT': f.start_lat,
+                '1st_LON': f.start_lon,
+                'END_DATE': f.end_date,
+                'END_LAT': f.end_lat,
+                'END_LON': f.end_lon,
+                'TYPE': f.type,
+                'FILENAME': f.filename
+            }
+    return {}
 
 # debug utilities
 
 def choose_random_float():
-    df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
-    return df.ix[np.random.choice(df.index)].ID
+    with xa(DATABASE_URL) as session:
+        for f in session.query(Float).order_by(func.random()).limit(1):
+            return f.id
+    return None
 
 

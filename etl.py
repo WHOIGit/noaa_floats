@@ -61,4 +61,5 @@ def etl():
     etl_metadata()
     etl_data()
 
-etl()
+if __name__=='__main__':
+    etl()
