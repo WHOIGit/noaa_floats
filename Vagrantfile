@@ -14,10 +14,11 @@ sudo apt-get install -y postgresql-9.3 postgresql-contrib-9.3 python-psycopg2
 sudo -u postgres createuser floats
 sudo -u postgres createdb -O floats floats
 sudo -u postgres psql -c "ALTER USER floats WITH ENCRYPTED PASSWORD 'floats';"
+sudo sed -i /etc/postgresql/9.3/main/postgresql.conf -e 's/^#listen_addresses/listen_addresses/'
 # postgis
 sudo apt-get install -y postgis postgresql-9.3-postgis-2.1
 sudo -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;" floats
-sudo sed -i /etc/postgresql/9.3/main/postgresql.conf -e 's/^#listen_addresses/listen_addresses/'
+# restart postgres
 sudo service postgresql restart
 SHELL
 end
