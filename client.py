@@ -1,5 +1,5 @@
 import requests
-4
+
 BASE_URL='http://localhost:8080'
 
 left,bottom,right,top=[-69.73895843749992, 37.59310012248169, -62.5319271874999, 41.52151087392275]
