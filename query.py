@@ -25,7 +25,7 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
             filter(Point.pressure > low_pressure).\
             filter(Point.pressure < high_pressure):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
-                p.id,
+                p.float_id,
                 render_date(p.date),
                 render_time(p.date),
                 p.lat,
