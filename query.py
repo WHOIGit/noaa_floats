@@ -1,5 +1,6 @@
 import numpy as np
 from pandas import read_csv
+from sqlalchemy import and_
 from sqlalchemy.sql.expression import func
 
 from utils import xa, render_date, render_time
@@ -14,16 +15,17 @@ METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LA
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
+
 def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
-        for p in session.query(Point).\
-            filter(Point.lon > left).\
-            filter(Point.lon < right).\
-            filter(Point.lat > bottom).\
-            filter(Point.lat < top).\
-            filter(Point.pressure > low_pressure).\
-            filter(Point.pressure < high_pressure):
+        for p in session.query(Point).join(Float).\
+            filter(Float.points.any(and_(Point.lon > left,\
+                                         Point.lon < right,\
+                                         Point.lat > bottom,\
+                                         Point.lat < top,\
+                                         Point.pressure > low_pressure,\
+                                         Point.pressure < high_pressure))):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
                 p.float_id,
                 render_date(p.date),
@@ -38,8 +40,7 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                 p.q_pos,
                 p.q_press,
                 p.q_vel,
-                p.q_temp
-                )
+                p.q_temp)
 
 def get_track(float_id):
     track = []
