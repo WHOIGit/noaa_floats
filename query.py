@@ -20,11 +20,11 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
         for p in session.query(Point).join(Float).\
-            filter(Float.points.any(and_(Point.lon > left,\
-                                         Point.lon < right,\
-                                         Point.lat > bottom,\
-                                         Point.lat < top,\
-                                         Point.pressure > low_pressure,\
+            filter(Float.points.any(and_(Point.lon > left,
+                                         Point.lon < right,
+                                         Point.lat > bottom,
+                                         Point.lat < top,
+                                         Point.pressure > low_pressure,
                                          Point.pressure < high_pressure))):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
                 p.float_id,
