@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request, redirect, url_for
 from flask import render_template
 
-from query import query_data, get_track, get_metadata, METADATA_COLS
+from query import query_data, query_floats, get_track, get_metadata, METADATA_COLS
 from query import choose_random_float
 
 app = Flask(__name__)
@@ -13,18 +13,28 @@ def index():
     rendered = render_template('top.html')
     return Response(rendered, mimetype='text/html')
 
-@app.route('/query.csv')
-def serve_query_csv():
+def get_request_args():
     left = float(request.args.get('left',-180))
     bottom = float(request.args.get('bottom',-90))
     right = float(request.args.get('right',180))
     top = float(request.args.get('top',90))
     low_pressure = float(request.args.get('low_pressure',0))
     high_pressure = float(request.args.get('high_pressure',9999))
+    return left, bottom, right, top, low_pressure, high_pressure
+
+@app.route('/query.csv')
+def serve_query_csv():
+    left, bottom, right, top, low_pressure, high_pressure = get_request_args()
     def line_generator():
         for line in query_data(left,bottom,right,top,low_pressure,high_pressure):
             yield line + '\n'
     return Response(line_generator(),mimetype='text/csv')
+
+@app.route('/query_floats.json')
+def serve_floats_json():
+    left, bottom, right, top, low_pressure, high_pressure = get_request_args()
+    float_ids = query_floats(left, bottom, right, top, low_pressure, high_pressure)
+    return Response(json.dumps(float_ids),mimetype='application/json')
 
 @app.route('/track/<int:float_id>')
 def serve_track(float_id):

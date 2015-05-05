@@ -31,6 +31,13 @@ function create_csv_link() {
     var paramString = $.param(params);
     var csv_url = '/query.csv?' + paramString
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
+    // now, for yucks, draw the tracks
+    $.getJSON('/query_floats.json?' + paramString, function(r) {
+	$.each(r, function(ix, float_id) {
+	    console.log('drawing track '+float_id);
+	    draw_track(float_id, featureOverlay);
+	});
+    });
 }
 
 // validate pressure inputs

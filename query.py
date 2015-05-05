@@ -15,7 +15,6 @@ METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LA
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
-
 def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
@@ -53,6 +52,17 @@ def get_track(float_id):
                 track.append((lon, lat))
         return track
     return None
+
+def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
+    with xa(DATABASE_URL) as session:
+        float_ids = [f.id for f in session.query(Float).\
+            filter(Float.points.any(and_(Point.lon > left,
+                                         Point.lon < right,
+                                         Point.lat > bottom,
+                                         Point.lat < top,
+                                         Point.pressure > low_pressure,
+                                         Point.pressure < high_pressure)))]
+    return float_ids
 
 def get_metadata(float_id):
     with xa(DATABASE_URL) as session:
