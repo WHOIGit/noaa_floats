@@ -14,6 +14,23 @@ var dragBox = new ol.interaction.DragBox({
 
 map.addInteraction(dragBox);
 
+/*
+// how to allow the user to draw a polygon feature
+var dragPolygon = new ol.interaction.Draw({
+    condition: ol.events.condition.shiftKeyOnly,
+    type: 'Polygon'
+});
+map.addInteraction(dragPolygon);
+dragPolygon.on('drawstart', function(e) {
+    featureOverlay.getFeatures().clear();
+});
+dragPolygon.on('drawend', function(e) {
+    console.log('drawend');
+    var feature = e.feature;
+    featureOverlay.addFeature(feature);
+});
+*/
+
 function create_csv_link() {
     var extent = dragBox.getGeometry().getExtent();
     latLonExtent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
