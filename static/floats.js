@@ -39,8 +39,11 @@ function create_overlay(map) {
 
 function draw_track(float_id, featureOverlay) {
     // now get a track and draw it
-    $.getJSON('/track/'+float_id, function(points) {
-	var geom = new ol.geom.LineString(points);
+    $.getJSON('/track/'+float_id, function(r) {
+	var format = new ol.format.WKT({
+	    defaultDataProjection: 'ESPG:4326'
+	});
+	var geom = format.readGeometry(r.track);
 	var xf = ol.proj.getTransform('EPSG:4326', 'EPSG:3857');
 	geom.applyTransform(xf);
 	var feature = new ol.Feature({

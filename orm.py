@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, Integer, BigInteger, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import backref, relationship
+from geoalchemy2 import Geometry
 
 Base = declarative_base()
 
@@ -19,6 +20,7 @@ class Float(Base):
     end_lon = Column(Numeric) # END_LON
     type = Column(String) # TYPE
     filename = Column(String) # FILENAME
+    track = Column(Geometry('LINESTRING'))
 
     def __repr__(self):
         return '<Float #%d>' % (self.id)

@@ -38,8 +38,12 @@ def serve_floats_json():
 
 @app.route('/track/<int:float_id>')
 def serve_track(float_id):
+    #track = get_track(float_id)
+    #return Response(json.dumps(track),mimetype='application/json')
     track = get_track(float_id)
-    return Response(json.dumps(track),mimetype='application/json')
+    return Response(json.dumps({
+        'track': track
+    }),mimetype='application/json')
 
 @app.route('/metadata/<int:float_id>')
 def serve_metadata(float_id):
@@ -62,4 +66,4 @@ def random_float_page():
     return redirect(url_for('float_page',float_id=float_id))
 
 if __name__=='__main__':
-    app.run(host='0.0.0.0',port=8080,debug=True)
+    app.run(host='0.0.0.0',port=8080,debug=True,processes=6)

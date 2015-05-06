@@ -14,9 +14,10 @@ CHUNK_SIZE=10000
 DATABASE_URL='postgresql://floats:floats@localhost/floats'
 
 def etl_data():
+    # read CSV containing all point data from all floats
+    n = 0
     for chunk in read_csv('./data/floats.dat',sep=DATA_SEPARATOR,iterator=True,chunksize=CHUNK_SIZE):
         chunk.fillna(0,inplace=True) # FIXME handle NA's better, e.g., with NULLs
-        print 'adding %s point(s)...' % len(chunk.index)
         with xa(DATABASE_URL) as session:
             for index, row in chunk.iterrows():
                 pt = Point(**{
@@ -35,6 +36,9 @@ def etl_data():
                     'q_temp': row.Q_TEMP
                 })
                 session.add(pt)
+        n += len(chunk.index)
+        print 'added %d point(s)...' % n
+
 
 def etl_metadata():
    df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
@@ -57,9 +61,27 @@ def etl_metadata():
            })
            session.add(flt)
 
+def etl_tracks():
+    with xa(DATABASE_URL) as session:
+        n = 0
+        for f in session.query(Float).order_by(Float.id):
+            ps = []
+            for p in f.points:
+                if p.lon != -999 and p.lat != -99: # exclude noninformative points
+                    ps.append('%.6f %.6f' % (float(p.lon), float(p.lat)))
+            if len(ps) == 1: # need more than one point
+                ps = ps + ps
+            ls = 'LINESTRING(%s)' % (','.join(ps))
+            print '%d: Float %ld %d points' % (n, f.id, len(ps))
+            f.track = ls
+            n += 1
+            if n % 100 == 0:
+                session.commit()
+
 def etl():
     etl_metadata()
     etl_data()
+    etl_tracks()
 
 if __name__=='__main__':
     etl()

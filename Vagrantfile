@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, inline: <<-SHELL
 sudo apt-get update
 # python numpy/scipy/pandas and flask/sqlalchemy
-sudo apt-get install -y python-pandas python-flask python-sqlalchemy
+sudo apt-get install -y python-pandas python-flask python-sqlalchemy python-pip
 # postgres 9.3
 sudo apt-get install -y postgresql-9.3 postgresql-contrib-9.3 python-psycopg2
 sudo -u postgres createuser floats
@@ -20,5 +20,7 @@ sudo apt-get install -y postgis postgresql-9.3-postgis-2.1
 sudo -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;" floats
 # restart postgres
 sudo service postgresql restart
+# geoalchemy2
+sudo pip install geoalchemy2
 SHELL
 end

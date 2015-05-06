@@ -41,7 +41,7 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                 p.q_vel,
                 p.q_temp)
 
-def get_track(float_id):
+def old_get_track(float_id):
     track = []
     float_id = int(float_id)
     with xa(DATABASE_URL) as session:
@@ -52,6 +52,12 @@ def get_track(float_id):
                 track.append((lon, lat))
         return track
     return None
+
+def get_track(float_id):
+    with xa(DATABASE_URL) as session:
+        for f in session.query(func.ST_AsText(Float.track)).filter(Float.id==float_id):
+            return f[0]
+    return 'LINESTRING()' # is this legal WKT?
 
 def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     with xa(DATABASE_URL) as session:
@@ -71,6 +77,10 @@ def get_metadata(float_id):
     return {}
 
 # debug utilities
+
+def count_floats():
+    with xa(DATABASE_URL) as session:
+        return session.query(Float.id).count()
 
 def choose_random_float():
     with xa(DATABASE_URL) as session:
