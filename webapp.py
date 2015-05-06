@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request, redirect, url_for
 from flask import render_template
 
-from query import query_data, query_floats, query_geom_floats, get_track, get_metadata, METADATA_COLS
+from query import query_data, query_geom_data, query_floats, query_geom_floats, get_track, get_metadata, METADATA_COLS
 from query import choose_random_float
 
 app = Flask(__name__)
@@ -30,17 +30,29 @@ def serve_query_csv():
             yield line + '\n'
     return Response(line_generator(),mimetype='text/csv')
 
+@app.route('/query_geom.csv')
+def serve_query_geom_csv():
+    geom, low_pressure, high_pressure = get_geom_request_args()
+    def line_generator():
+        for line in query_geom_data(geom, low_pressure, high_pressure):
+            yield line + '\n'
+    return Response(line_generator(),mimetype='text/csv')
+            
 @app.route('/query_floats.json')
 def serve_floats_json():
     left, bottom, right, top, low_pressure, high_pressure = get_request_args()
     float_ids = query_floats(left, bottom, right, top, low_pressure, high_pressure)
     return Response(json.dumps(float_ids),mimetype='application/json')
 
-@app.route('/query_geom_floats.json')
-def serve_geom_floats_json():
+def get_geom_request_args():
     low_pressure = request.args.get('low_pressure',0)
     high_pressure = request.args.get('high_pressure',9999)
     geom = request.args.get('geometry',None)
+    return geom, low_pressure, high_pressure
+
+@app.route('/query_geom_floats.json')
+def serve_geom_floats_json():
+    geom, low_pressure, high_pressure = get_geom_request_args()
     float_ids = query_geom_floats(geom,low_pressure,high_pressure)
     return Response(json.dumps(float_ids),mimetype='application/json')
 

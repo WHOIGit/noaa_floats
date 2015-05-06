@@ -15,12 +15,11 @@ METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LA
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
-def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
+def query_geom_data(geom,low_pressure=0,high_pressure=9999):
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
         for p in session.query(Point).join(Float).\
-            filter(func.ST_Intersects(Float.track,
-                                      func.ST_MakeEnvelope(left, bottom, right, top))).\
+            filter(func.ST_Intersects(Float.track, geom)).\
             filter(Float.points.any(and_(Point.pressure > low_pressure,
                                          Point.pressure < high_pressure))):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
@@ -38,6 +37,10 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                 p.q_press,
                 p.q_vel,
                 p.q_temp)
+
+def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
+    for line in query_geom_data(func.ST_MakeEnvelope(left, bottom, right, top),low_pressure,high_pressure):
+        yield line
 
 def get_track(float_id):
     # return float track in WKT

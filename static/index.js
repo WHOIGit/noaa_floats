@@ -36,24 +36,35 @@ dragPolygon.on('drawstart', function(e) {
     featureOverlay.getFeatures().clear();
 });
 dragPolygon.on('drawend', function(e) {
+    // draw a copy of the feature on the map
     var feature = e.feature;
     featureOverlay.addFeature(feature.clone());
+    // now convert it to lat/lon
+    feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
+    // now generate a WKT representation of it
     var format = new ol.format.WKT({
 	defaultDataProjection: 'ESPG:3857'
     });
-    feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
+    var wkt = format.writeFeature(feature);
+    // add pressure parameters to geometry parameter
     var params = {
 	low_pressure: Number($('#low_pressure').val()),
 	high_pressure: Number($('#high_pressure').val()),
 	geometry: format.writeFeature(feature)
     };
     var paramString = $.param(params);
+    // query for floats
     $.getJSON('/query_geom_floats.json?' + paramString, function(r) {
-	$.each(r, function(ix, float_id) {
+	$.each(r, function(ix, float_id) { // for each float
+	    // draw its track
 	    console.log('drawing track '+float_id);
 	    draw_track(float_id, featureOverlay);
 	});
     });
+    // generate a CSV URL for this query
+    var csv_url = '/query_geom.csv?' + paramString;
+    // and populate the link interface
+    $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
 });
 
 function create_csv_link() {
