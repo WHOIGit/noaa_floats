@@ -1,7 +1,9 @@
 function create_map(target) {
+    // create map based on MapQuest satellite layer
     var mqLayer = new ol.layer.Tile({
 	source: new ol.source.MapQuest({layer:'sat'})
     });
+    // center of the universe is Woods Hole MA
     var woho = ol.proj.transform([-70.661810, 41.526994], 'EPSG:4326', 'EPSG:3857');
     var aView = new ol.View({
 	center: woho,
@@ -16,6 +18,7 @@ function create_map(target) {
 }
 
 function create_overlay(map) {
+    // create an overlay for features
     var featureOverlay = new ol.FeatureOverlay({
 	style: new ol.style.Style({
 	    fill: new ol.style.Fill({
@@ -38,14 +41,13 @@ function create_overlay(map) {
 }
 
 function draw_track(float_id, featureOverlay) {
-    // now get a track and draw it
+    // get a track and draw it
     $.getJSON('/track/'+float_id, function(r) {
 	var format = new ol.format.WKT({
 	    defaultDataProjection: 'ESPG:4326'
 	});
 	var geom = format.readGeometry(r.track);
-	var xf = ol.proj.getTransform('EPSG:4326', 'EPSG:3857');
-	geom.applyTransform(xf);
+	geom.transform('EPSG:4326', 'EPSG:3857');
 	var feature = new ol.Feature({
 	    geometry: geom,
 	    name: ''+float_id

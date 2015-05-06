@@ -3,6 +3,7 @@ var map = create_map('map');
 var featureOverlay = create_overlay(map);
 
 // a DragBox interaction used to select features by drawing boxes
+/*
 var dragBox = new ol.interaction.DragBox({
     condition: ol.events.condition.shiftKeyOnly,
     style: new ol.style.Style({
@@ -11,11 +12,21 @@ var dragBox = new ol.interaction.DragBox({
         })
     })
 });
-
 map.addInteraction(dragBox);
+dragBox.on('boxstart', function(e) {
+    featureOverlay.getFeatures().clear();
+    $('#download').empty();
+});
+dragBox.on('boxend', function(e) {
+    var feature = new ol.Feature({
+      geometry: dragBox.getGeometry(),
+    });
+    featureOverlay.addFeature(feature);
+    create_csv_link();
+});
+*/
 
-/*
-// how to allow the user to draw a polygon feature
+// allow the user to draw a polygon feature
 var dragPolygon = new ol.interaction.Draw({
     condition: ol.events.condition.shiftKeyOnly,
     type: 'Polygon'
@@ -25,11 +36,25 @@ dragPolygon.on('drawstart', function(e) {
     featureOverlay.getFeatures().clear();
 });
 dragPolygon.on('drawend', function(e) {
-    console.log('drawend');
     var feature = e.feature;
-    featureOverlay.addFeature(feature);
+    featureOverlay.addFeature(feature.clone());
+    var format = new ol.format.WKT({
+	defaultDataProjection: 'ESPG:3857'
+    });
+    feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
+    var params = {
+	low_pressure: Number($('#low_pressure').val()),
+	high_pressure: Number($('#high_pressure').val()),
+	geometry: format.writeFeature(feature)
+    };
+    var paramString = $.param(params);
+    $.getJSON('/query_geom_floats.json?' + paramString, function(r) {
+	$.each(r, function(ix, float_id) {
+	    console.log('drawing track '+float_id);
+	    draw_track(float_id, featureOverlay);
+	});
+    });
 });
-*/
 
 function create_csv_link() {
     var extent = dragBox.getGeometry().getExtent();
@@ -68,18 +93,5 @@ $('#high_pressure').on('change paste', function() {
     if(isNaN($('#high_pressure').val())) {
 	$('#high_pressure').val('9999');
     }
-    create_csv_link();
-});
-
-
-dragBox.on('boxstart', function(e) {
-    featureOverlay.getFeatures().clear();
-    $('#download').empty();
-});
-dragBox.on('boxend', function(e) {
-    var feature = new ol.Feature({
-      geometry: dragBox.getGeometry(),
-    });
-    featureOverlay.addFeature(feature);
     create_csv_link();
 });

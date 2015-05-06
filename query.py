@@ -40,6 +40,7 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                 p.q_temp)
 
 def get_track(float_id):
+    # return float track in WKT
     with xa(DATABASE_URL) as session:
         for f in session.query(func.ST_AsText(Float.track)).filter(Float.id==float_id):
             return f[0]
@@ -50,6 +51,14 @@ def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_press
         float_ids = [f.id for f in session.query(Float).\
             filter(func.ST_Intersects(Float.track,
                                       func.ST_MakeEnvelope(left, bottom, right, top))).\
+            filter(Float.points.any(and_(Point.pressure > low_pressure,
+                                         Point.pressure < high_pressure)))]
+    return float_ids
+
+def query_geom_floats(geom,low_pressure=0,high_pressure=9999):
+    with xa(DATABASE_URL) as session:
+        float_ids = [f.id for f in session.query(Float).\
+            filter(func.ST_Intersects(Float.track, geom)).\
             filter(Float.points.any(and_(Point.pressure > low_pressure,
                                          Point.pressure < high_pressure)))]
     return float_ids

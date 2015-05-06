@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request, redirect, url_for
 from flask import render_template
 
-from query import query_data, query_floats, get_track, get_metadata, METADATA_COLS
+from query import query_data, query_floats, query_geom_floats, get_track, get_metadata, METADATA_COLS
 from query import choose_random_float
 
 app = Flask(__name__)
@@ -36,11 +36,17 @@ def serve_floats_json():
     float_ids = query_floats(left, bottom, right, top, low_pressure, high_pressure)
     return Response(json.dumps(float_ids),mimetype='application/json')
 
+@app.route('/query_geom_floats.json')
+def serve_geom_floats_json():
+    low_pressure = request.args.get('low_pressure',0)
+    high_pressure = request.args.get('high_pressure',9999)
+    geom = request.args.get('geometry',None)
+    float_ids = query_geom_floats(geom,low_pressure,high_pressure)
+    return Response(json.dumps(float_ids),mimetype='application/json')
+
 @app.route('/track/<int:float_id>')
 def serve_track(float_id):
-    #track = get_track(float_id)
-    #return Response(json.dumps(track),mimetype='application/json')
-    track = get_track(float_id)
+    track = get_track(float_id) # wkt
     return Response(json.dumps({
         'track': track
     }),mimetype='application/json')
