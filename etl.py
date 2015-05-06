@@ -65,10 +65,19 @@ def etl_tracks():
     with xa(DATABASE_URL) as session:
         n = 0
         for f in session.query(Float).order_by(Float.id):
+            lon_adj = 0
+            prev_lon = 0
             ps = []
             for p in f.points:
                 if p.lon != -999 and p.lat != -99: # exclude noninformative points
-                    ps.append('%.6f %.6f' % (float(p.lon), float(p.lat)))
+                    lat, lon = float(p.lat), float(p.lon)
+                    # what if float just crossed the int'l date line
+                    if prev_lon < -90 and lon > 90: # going west?
+                        lon_adj -= 360
+                    elif prev_lon > 90 and lon < -90: # going east?
+                        lon_adj += 360
+                    ps.append('%.6f %.6f' % (lon + lon_adj, lat))
+                    prev_lon = lon
             if len(ps) == 1: # need more than one point
                 ps = ps + ps
             ls = 'LINESTRING(%s)' % (','.join(ps))

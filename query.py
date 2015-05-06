@@ -19,11 +19,9 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
         for p in session.query(Point).join(Float).\
-            filter(Float.points.any(and_(Point.lon > left,
-                                         Point.lon < right,
-                                         Point.lat > bottom,
-                                         Point.lat < top,
-                                         Point.pressure > low_pressure,
+            filter(func.ST_Intersects(Float.track,
+                                      func.ST_MakeEnvelope(left, bottom, right, top))).\
+            filter(Float.points.any(and_(Point.pressure > low_pressure,
                                          Point.pressure < high_pressure))):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
                 p.float_id,
@@ -41,32 +39,18 @@ def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressur
                 p.q_vel,
                 p.q_temp)
 
-def old_get_track(float_id):
-    track = []
-    float_id = int(float_id)
-    with xa(DATABASE_URL) as session:
-        for f in session.query(Float).filter(Float.id==float_id):
-            for p in f.points:
-                lon = float(p.lon)
-                lat = float(p.lat)
-                track.append((lon, lat))
-        return track
-    return None
-
 def get_track(float_id):
     with xa(DATABASE_URL) as session:
         for f in session.query(func.ST_AsText(Float.track)).filter(Float.id==float_id):
             return f[0]
-    return 'LINESTRING()' # is this legal WKT?
+    return 'LINESTRING(0 0,0 0)' # dummy geometry if float is not found
 
 def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
     with xa(DATABASE_URL) as session:
         float_ids = [f.id for f in session.query(Float).\
-            filter(Float.points.any(and_(Point.lon > left,
-                                         Point.lon < right,
-                                         Point.lat > bottom,
-                                         Point.lat < top,
-                                         Point.pressure > low_pressure,
+            filter(func.ST_Intersects(Float.track,
+                                      func.ST_MakeEnvelope(left, bottom, right, top))).\
+            filter(Float.points.any(and_(Point.pressure > low_pressure,
                                          Point.pressure < high_pressure)))]
     return float_ids
 
