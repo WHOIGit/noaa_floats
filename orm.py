@@ -3,9 +3,17 @@ from sqlalchemy import Column, String, Integer, BigInteger, Numeric, DateTime, F
 from sqlalchemy.orm import backref, relationship
 from geoalchemy2 import Geometry
 
+"""
+Object-relational model of floats database.
+See etl.py for extract/transform/load procedure
+"""
+
 Base = declarative_base()
 
 class Float(Base):
+    """
+    Represents a single NOAA float from the database.
+    """
     __tablename__ = 'floats'
 
     id = Column(BigInteger, primary_key=True) # ID
@@ -20,12 +28,15 @@ class Float(Base):
     end_lon = Column(Numeric) # END_LON
     type = Column(String) # TYPE
     filename = Column(String) # FILENAME
-    track = Column(Geometry('LINESTRING'))
+    track = Column(Geometry('LINESTRING')) # track geometry
 
     def __repr__(self):
         return '<Float #%d>' % (self.id)
 
     def get_metadata(self):
+        """
+        Return float metadata as dict
+        """
         return {
             'ID': self.id,
             'PRINCIPAL_INVESTIGATOR': self.pi,
@@ -43,23 +54,27 @@ class Float(Base):
 
 
 class Point(Base):
+    """
+    Represents a single point along a float track
+    """
     __tablename__ = 'points'
 
     id = Column(BigInteger, primary_key=True)
     float_id = Column(BigInteger, ForeignKey('floats.id'))
     date = Column(DateTime) # DATE, TIME
-    lat = Column(Numeric)
-    lon = Column(Numeric)
-    pressure = Column(Numeric)
-    u = Column(Numeric) # velocity
-    v = Column(Numeric) # velocity
-    temperature = Column(Numeric)
-    q_time = Column(Integer)
-    q_pos = Column(Integer)
-    q_press = Column(Integer)
-    q_vel = Column(Integer)
-    q_temp = Column(Integer)
+    lat = Column(Numeric) # latitude
+    lon = Column(Numeric) # longitude
+    pressure = Column(Numeric) # pressure
+    u = Column(Numeric) # velocity u component
+    v = Column(Numeric) # velocity v component
+    temperature = Column(Numeric) # temperature
+    q_time = Column(Integer) # quality annotation on date/time
+    q_pos = Column(Integer) # quality annotation on lat/lon
+    q_press = Column(Integer) # quality annotation on pressure
+    q_vel = Column(Integer) # quality annotation on u/v
+    q_temp = Column(Integer) # quality annotation on temperature
 
+    # establish Float.points relationship
     float = relationship('Float',
                          backref=backref('points', cascade='all, delete-orphan'))
 

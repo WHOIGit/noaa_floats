@@ -30,14 +30,6 @@ def serve_query_csv():
             yield line + '\n'
     return Response(line_generator(),mimetype='text/csv')
 
-@app.route('/query_geom.csv')
-def serve_query_geom_csv():
-    geom, low_pressure, high_pressure = get_geom_request_args()
-    def line_generator():
-        for line in query_geom_data(geom, low_pressure, high_pressure):
-            yield line + '\n'
-    return Response(line_generator(),mimetype='text/csv')
-            
 @app.route('/query_floats.json')
 def serve_floats_json():
     left, bottom, right, top, low_pressure, high_pressure = get_request_args()
@@ -49,6 +41,14 @@ def get_geom_request_args():
     high_pressure = request.args.get('high_pressure',9999)
     geom = request.args.get('geometry',None)
     return geom, low_pressure, high_pressure
+
+@app.route('/query_geom.csv')
+def serve_query_geom_csv():
+    geom, low_pressure, high_pressure = get_geom_request_args()
+    def line_generator():
+        for line in query_geom_data(geom, low_pressure, high_pressure):
+            yield line + '\n'
+    return Response(line_generator(),mimetype='text/csv')
 
 @app.route('/query_geom_floats.json')
 def serve_geom_floats_json():

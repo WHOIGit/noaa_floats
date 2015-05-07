@@ -3,18 +3,28 @@ from pandas import read_csv
 from orm import Base, Float, Point
 from utils import parse_date_time, xa
 
+"""
+Extract, transform, and load procedure for floats database
+"""
+
+# column definitions
 DATA_COLS='ID,DATE,TIME,LAT,LON,PRESS,U,V,TEMP,Q_TIME,Q_POS,Q_PRESS,Q_VEL,Q_TEMP'.split(',')
 METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LAT,1st_LON,END_DATE,END_LAT,END_LON,TYPE,FILENAME'.split(',')
 
+# separators
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
+# number of points to process at once
 CHUNK_SIZE=10000
 
+# local database connection information
 DATABASE_URL='postgresql://floats:floats@localhost/floats'
 
 def etl_data():
-    # read CSV containing all point data from all floats
+    """
+    Load CSV file containing point data for all floats
+    """
     n = 0
     for chunk in read_csv('./data/floats.dat',sep=DATA_SEPARATOR,iterator=True,chunksize=CHUNK_SIZE):
         chunk.fillna(0,inplace=True) # FIXME handle NA's better, e.g., with NULLs
@@ -41,33 +51,43 @@ def etl_data():
 
 
 def etl_metadata():
-   df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
-   print 'adding %s float(s)...' % len(df.index)
-   with xa(DATABASE_URL, Base.metadata) as session:
-       for index, row in df.iterrows():
-           flt = Float(**{
-               'id': row.ID,
-               'pi': row.PRINCIPAL_INVESTIGATOR,
-               'organization': row.ORGANIZATION,
-               'experiment': row.EXPERIMENT,
-               'start_date': row['1st_DATE'],
-               'start_lat': row['1st_LAT'],
-               'start_lon': row['1st_LON'],
-               'end_date': row.END_DATE,
-               'end_lat': row.END_LAT,
-               'end_lon': row.END_LON,
-               'type': row.TYPE,
-               'filename': row.FILENAME
-           })
-           session.add(flt)
+    """
+    Load CSV file containing metadata for all floats
+    """
+    df = read_csv('./data/floats_dirfl.dat',sep=METADATA_SEPARATOR,index_col=False)
+    print 'adding %s float(s)...' % len(df.index)
+    with xa(DATABASE_URL, Base.metadata) as session:
+        for index, row in df.iterrows():
+            flt = Float(**{
+                    'id': row.ID,
+                    'pi': row.PRINCIPAL_INVESTIGATOR,
+                    'organization': row.ORGANIZATION,
+                    'experiment': row.EXPERIMENT,
+                    'start_date': row['1st_DATE'],
+                    'start_lat': row['1st_LAT'],
+                    'start_lon': row['1st_LON'],
+                    'end_date': row.END_DATE,
+                    'end_lat': row.END_LAT,
+                    'end_lon': row.END_LON,
+                    'type': row.TYPE,
+                    'filename': row.FILENAME
+                    })
+            session.add(flt)
 
 def etl_tracks():
+    """
+    Once float and point data is loaded, generate a track geometry
+    for each float from the point data. This has less information in it
+    than the point data and is used for geospatial queries
+    """
     with xa(DATABASE_URL) as session:
         n = 0
+        # for each float, construct a WKT LINESTRING geometry
         for f in session.query(Float).order_by(Float.id):
             lon_adj = 0
             prev_lon = 0
             ps = []
+            # for all the points in this float's track:
             for p in f.points:
                 if p.lon != -999 and p.lat != -99: # exclude noninformative points
                     lat, lon = float(p.lat), float(p.lon)
@@ -80,17 +100,25 @@ def etl_tracks():
                     prev_lon = lon
             if len(ps) == 1: # need more than one point
                 ps = ps + ps
+            # format in WKT
             ls = 'LINESTRING(%s)' % (','.join(ps))
             print '%d: Float %ld %d points' % (n, f.id, len(ps))
             f.track = ls
             n += 1
-            if n % 100 == 0:
+            if n % 100 == 0: # commit occasionally
                 session.commit()
+            # final commit is handled by the context manager
 
 def etl():
-    etl_metadata()
-    etl_data()
-    etl_tracks()
+    """
+    Extract, transform, and load all data.
+    """
+    etl_metadata() # first, float metadata
+    etl_data() # then all data
+    etl_tracks() # then geospatial tracks
 
 if __name__=='__main__':
+    """
+    Extract, transform, and load all data
+    """
     etl()

@@ -1,11 +1,11 @@
 // using functions from floats.js
 var map = create_map('map');
 
-// create layer for selections
-var selectionLayer = create_overlay(map, '#ff0000');
-
 // create layer for tracks
 var tracksLayer = create_overlay(map, '#ffcc33');
+
+// create layer for selections
+var selectionLayer = create_overlay(map, '#ff0000');
 
 // a DragBox interaction used to select features by drawing boxes
 /*
