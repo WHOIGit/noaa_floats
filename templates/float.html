@@ -39,7 +39,7 @@
     <div class="footer">footer <a href="/random_float">random</a></div>
     <script type="text/javascript">
 var map = create_map('map');
-var overlay = create_overlay(map);
+var overlay = create_overlay(map, '#ffcc33');
 map.getView().setCenter(ol.proj.transform
   ([{{metadata['1st_LON']}}, {{metadata['1st_LAT']}}], 'EPSG:4326', 'EPSG:3857'));
 draw_track({{float_id}},overlay);
