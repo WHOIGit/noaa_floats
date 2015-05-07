@@ -17,27 +17,21 @@ function create_map(target) {
     return map;
 }
 
-function create_overlay(map) {
+function create_overlay(map, color) {
     // create an overlay for features
-    var featureOverlay = new ol.FeatureOverlay({
+    var overlay = new ol.FeatureOverlay({
 	style: new ol.style.Style({
 	    fill: new ol.style.Fill({
 		color: 'rgba(255, 255, 255, 0.2)'
 	    }),
 	    stroke: new ol.style.Stroke({
-		color: '#ffcc33',
+		color: color,
 		width: 2
-	    }),
-	    image: new ol.style.Circle({
-		radius: 7,
-		fill: new ol.style.Fill({
-		    color: '#ffcc33'
-		})
 	    })
 	})
     });
-    featureOverlay.setMap(map);
-    return featureOverlay;
+    overlay.setMap(map);
+    return overlay;
 }
 
 function draw_track(float_id, featureOverlay) {

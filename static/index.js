@@ -1,6 +1,11 @@
 // using functions from floats.js
 var map = create_map('map');
-var featureOverlay = create_overlay(map);
+
+// create layer for selections
+var selectionLayer = create_overlay(map, '#ff0000');
+
+// create layer for tracks
+var tracksLayer = create_overlay(map, '#ffcc33');
 
 // a DragBox interaction used to select features by drawing boxes
 /*
@@ -33,12 +38,13 @@ var dragPolygon = new ol.interaction.Draw({
 });
 map.addInteraction(dragPolygon);
 dragPolygon.on('drawstart', function(e) {
-    featureOverlay.getFeatures().clear();
+    selectionLayer.getFeatures().clear();
+    tracksLayer.getFeatures().clear();
 });
 dragPolygon.on('drawend', function(e) {
     // draw a copy of the feature on the map
     var feature = e.feature;
-    featureOverlay.addFeature(feature.clone());
+    selectionLayer.addFeature(feature.clone());
     // now convert it to lat/lon
     feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
     // now generate a WKT representation of it
@@ -58,7 +64,7 @@ dragPolygon.on('drawend', function(e) {
 	$.each(r, function(ix, float_id) { // for each float
 	    // draw its track
 	    console.log('drawing track '+float_id);
-	    draw_track(float_id, featureOverlay);
+	    draw_track(float_id, tracksLayer);
 	});
     });
     // generate a CSV URL for this query
@@ -88,7 +94,7 @@ function create_csv_link() {
     $.getJSON('/query_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) {
 	    console.log('drawing track '+float_id);
-	    draw_track(float_id, featureOverlay);
+	    draw_track(float_id, tracksLayer);
 	});
     });
 }
