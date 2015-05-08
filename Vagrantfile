@@ -4,7 +4,7 @@ Vagrant.configure("2") do |config|
     vb.memory="1024"
   end
   config.vm.network :forwarded_port, host: 8080, guest: 8080
-  config.vm.network :forwarded_port, host: 5433, guest: 5432
+  config.vm.network :forwarded_port, host: 5434, guest: 5432
   config.vm.provision :shell, inline: <<-SHELL
 sudo apt-get update
 # python numpy/scipy/pandas and flask/sqlalchemy
@@ -14,7 +14,8 @@ sudo apt-get install -y postgresql-9.3 postgresql-contrib-9.3 python-psycopg2
 sudo -u postgres createuser floats
 sudo -u postgres createdb -O floats floats
 sudo -u postgres psql -c "ALTER USER floats WITH ENCRYPTED PASSWORD 'floats';"
-sudo sed -i /etc/postgresql/9.3/main/postgresql.conf -e 's/^#listen_addresses/listen_addresses/'
+sudo sed -i /etc/postgresql/9.3/main/postgresql.conf -e "s/^#listen_addresses.*/listen_addresses = '*'/"
+sudo echo "host floats floats 10.0.2.2/16 md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 # postgis
 sudo apt-get install -y postgis postgresql-9.3-postgis-2.1
 sudo -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;" floats
