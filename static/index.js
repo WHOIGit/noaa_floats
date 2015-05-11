@@ -39,9 +39,9 @@ var dragPolygon = new ol.interaction.Draw({
 map.addInteraction(dragPolygon);
 dragPolygon.on('drawstart', function(e) {
     selectionLayer.getFeatures().clear();
-    tracksLayer.getFeatures().clear();
 });
 dragPolygon.on('drawend', function(e) {
+    tracksLayer.getFeatures().clear();
     // draw a copy of the feature on the map
     var feature = e.feature;
     selectionLayer.addFeature(feature.clone());
