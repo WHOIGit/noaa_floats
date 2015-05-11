@@ -34,6 +34,20 @@ function create_overlay(map, color) {
     return overlay;
 }
 
+function random_color() {
+    var r = Math.floor(Math.random()*256);
+    var g = Math.floor(Math.random()*256);
+    var b = Math.floor(Math.random()*256);
+    return 'rgb('+r+','+g+','+b+')';
+}
+
+function id2color(id) {
+    var r = (id % 128) + 127;
+    var g = ((id >> 7) % 128) + 127;
+    var b = ((id >> 14) % 128) + 127;
+    return 'rgb('+r+','+g+','+b+')';
+}
+
 function draw_track(float_id, featureOverlay) {
     // get a track and draw it
     $.getJSON('/track/'+float_id, function(r) {
@@ -46,6 +60,12 @@ function draw_track(float_id, featureOverlay) {
 	    geometry: geom,
 	    name: ''+float_id
 	});
+	feature.setStyle(new ol.style.Style({
+	    stroke: new ol.style.Stroke({
+		color: id2color(float_id),
+		width: 2
+	    })
+	}));
 	featureOverlay.addFeature(feature);
     });
 }
