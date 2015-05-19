@@ -15,7 +15,10 @@ METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LA
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
-def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date='1972-09-28',end_date='2015-01-01'):
+DEFAULT_START_DATE='1972-09-28'
+DEFAULT_END_DATE='2015-01-01'
+
+def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
     """
     Return all floats data in CSV format for any float which
     intersects the given WKT geometry and pressure range
@@ -61,20 +64,20 @@ def get_track(float_id):
             return f[0]
     return 'LINESTRING(0 0,0 0)' # dummy geometry if float is not found
 
-def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
+def query_floats(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
     """
     Return the IDs of all floats that intersect the given bounding box
     and pressure range.
     """
     with xa(DATABASE_URL) as session:
         float_ids = [f.id for f in session.query(Float).\
-            filter(func.ST_Intersects(Float.track,
-                                      func.ST_MakeEnvelope(left, bottom, right, top))).\
             filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure)))]
+                                         Point.pressure < high_pressure,
+                                         Point.date >= start_date,
+                                         Point.date <= end_date)))]
     return float_ids
 
-def query_geom_floats(geom,low_pressure=0,high_pressure=9999,start_date='1972-09-28',end_date='2015-01-01'):
+def query_geom_floats(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
     """
     Return the IDs of all floats that intersect the given WKT geometry
     and pressure range.

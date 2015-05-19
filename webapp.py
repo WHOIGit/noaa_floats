@@ -14,38 +14,25 @@ def index():
     return Response(rendered, mimetype='text/html')
 
 def get_request_args():
-    left = float(request.args.get('left',-180))
-    bottom = float(request.args.get('bottom',-90))
-    right = float(request.args.get('right',180))
-    top = float(request.args.get('top',90))
-    low_pressure = float(request.args.get('low_pressure',0))
-    high_pressure = float(request.args.get('high_pressure',9999))
-    return left, bottom, right, top, low_pressure, high_pressure
-
-@app.route('/query.csv')
-def serve_query_csv():
-    left, bottom, right, top, low_pressure, high_pressure = get_request_args()
-    def line_generator():
-        for line in query_data(left,bottom,right,top,low_pressure,high_pressure):
-            yield line + '\n'
-    return Response(line_generator(),mimetype='text/csv')
-
-@app.route('/query_floats.json')
-def serve_floats_json():
-    left, bottom, right, top, low_pressure, high_pressure = get_request_args()
-    float_ids = query_floats(left, bottom, right, top, low_pressure, high_pressure)
-    return Response(json.dumps(float_ids),mimetype='application/json')
+    low_pressure = request.args.get('low_pressure',0)
+    high_pressure = request.args.get('high_pressure',9999)
+    start_date = request.args.get('start_date','1972-09-28')
+    end_date = request.args.get('end_date','2015-01-01')
+    return low_pressure, high_pressure, start_date, end_date
 
 @app.route('/all_floats.json')
 def all_floats_json():
     float_ids = all_floats()
     return Response(json.dumps(float_ids),mimetype='application/json')
 
+@app.route('/query_floats.json')
+def query_floats_json():
+    low_pressure, high_pressure, start_date, end_date = get_request_args()
+    float_ids = query_floats(low_pressure,high_pressure,start_date,end_date)
+    return Response(json.dumps(float_ids),mimetype='application/json')
+
 def get_geom_request_args():
-    low_pressure = request.args.get('low_pressure',0)
-    high_pressure = request.args.get('high_pressure',9999)
-    start_date = request.args.get('start_date','1972-09-28')
-    end_date = request.args.get('end_date','2015-01-01')
+    low_pressure, high_pressure, start_date, end_date = get_request_args()
     geom = request.args.get('geometry',None)
     return geom, low_pressure, high_pressure, start_date, end_date
 

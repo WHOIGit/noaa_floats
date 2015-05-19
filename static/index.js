@@ -34,7 +34,7 @@ dragPolygon.on('drawend', function(e) {
 	high_pressure: getHighPressure(),
 	start_date: formatDateParam(getStartDate()),
 	end_date: formatDateParam(getEndDate()),
-	geometry: format.writeFeature(feature)
+	geometry: wkt
     };
     var paramString = $.param(params);
     // query for floats
@@ -50,7 +50,6 @@ dragPolygon.on('drawend', function(e) {
     // and populate the link interface
     $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
 });
-
 function getLowPressure() {
     return $('#pressureSlider').rangeSlider("values").min;
 }
@@ -69,7 +68,18 @@ function formatDateParam(dp) {
 
 // show all float tracks
 $('#all').on('click', function() {
-    $.getJSON('/all_floats.json', function(r) {
+    // clear layers
+    selectionLayer.getFeatures().clear();
+    tracksLayer.getFeatures().clear();
+    //
+    var params = {
+	low_pressure: getLowPressure(),
+	high_pressure: getHighPressure(),
+	start_date: formatDateParam(getStartDate()),
+	end_date: formatDateParam(getEndDate()),
+    };
+    var paramString = $.param(params);
+    $.getJSON('/query_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) {
 	    console.log('drawing track '+float_id);
 	    draw_track(float_id, tracksLayer);
