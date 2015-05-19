@@ -20,6 +20,8 @@ def get_request_args():
     end_date = request.args.get('end_date','2015-01-01')
     return low_pressure, high_pressure, start_date, end_date
 
+# simple queries
+
 @app.route('/all_floats.json')
 def all_floats_json():
     float_ids = all_floats()
@@ -30,6 +32,16 @@ def query_floats_json():
     low_pressure, high_pressure, start_date, end_date = get_request_args()
     float_ids = query_floats(low_pressure,high_pressure,start_date,end_date)
     return Response(json.dumps(float_ids),mimetype='application/json')
+
+@app.route('/query.csv')
+def serve_query_csv():
+    low_pressure, high_pressure, start_date, end_date = get_request_args()
+    def line_generator():
+        for line in query_data(low_pressure, high_pressure, start_date, end_date):
+            yield line + '\n'
+    return Response(line_generator(),mimetype='text/csv')
+
+# geospatial queries
 
 def get_geom_request_args():
     low_pressure, high_pressure, start_date, end_date = get_request_args()

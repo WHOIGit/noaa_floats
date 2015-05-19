@@ -18,6 +18,23 @@ METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 DEFAULT_START_DATE='1972-09-28'
 DEFAULT_END_DATE='2015-01-01'
 
+def point2csv(p):
+    return '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
+        p.float_id,
+        render_date(p.date),
+        render_time(p.date),
+        p.lat,
+        p.lon,
+        p.pressure,
+        p.u,
+        p.v,
+        p.temperature,
+        p.q_time,
+        p.q_pos,
+        p.q_press,
+        p.q_vel,
+        p.q_temp)
+
 def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
     """
     Return all floats data in CSV format for any float which
@@ -31,29 +48,20 @@ def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_ST
                                          Point.pressure < high_pressure,
                                          Point.date >= start_date,
                                          Point.date <= end_date))):
-            yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
-                p.float_id,
-                render_date(p.date),
-                render_time(p.date),
-                p.lat,
-                p.lon,
-                p.pressure,
-                p.u,
-                p.v,
-                p.temperature,
-                p.q_time,
-                p.q_pos,
-                p.q_press,
-                p.q_vel,
-                p.q_temp)
+            yield point2csv(p)
 
-def query_data(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_pressure=9999):
+def query_data(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
     """
-    Return all floats data in CSV format for any float which
-    intersects the given bounding box and pressure range
+    Return all floats data in CSV format for any float which matches
     """
-    for line in query_geom_data(func.ST_MakeEnvelope(left, bottom, right, top),low_pressure,high_pressure):
-        yield line
+    yield ','.join(DATA_COLS)
+    with xa(DATABASE_URL) as session:
+        for p in session.query(Point).join(Float).\
+            filter(Float.points.any(and_(Point.pressure > low_pressure,
+                                         Point.pressure < high_pressure,
+                                         Point.date >= start_date,
+                                         Point.date <= end_date))):
+            yield point2csv(p)
 
 def get_track(float_id):
     """

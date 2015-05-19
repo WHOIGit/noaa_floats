@@ -85,6 +85,10 @@ $('#all').on('click', function() {
 	    draw_track(float_id, tracksLayer);
 	});
     });
+    // generate a CSV URL for this query
+    var csv_url = '/query.csv?' + paramString;
+    // and populate the link interface
+    $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
 });
 
 // pressure slider
