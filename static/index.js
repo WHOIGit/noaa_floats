@@ -45,16 +45,13 @@ dragPolygon.on('drawend', function(e) {
 	    draw_track(float_id, tracksLayer);
 	});
     });
-    // generate a CSV URL for this query
-    var csv_url = '/query_geom.csv?' + paramString;
-    // and populate the link interface
-    $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
+    createDownloadLink('/query_geom.csv', paramString);
 });
 function getLowPressure() {
-    return $('#pressureSlider').rangeSlider("values").min;
+    return Math.round($('#pressureSlider').rangeSlider("values").min);
 }
 function getHighPressure() {
-    return $('#pressureSlider').rangeSlider("values").max;
+    return Math.round($('#pressureSlider').rangeSlider("values").max);
 }
 function getStartDate() {
     return $('#dateSlider').dateRangeSlider("values").min;
@@ -66,29 +63,38 @@ function formatDateParam(dp) {
     return dp.toISOString().substring(0,10);
 }
 
-// show all float tracks
-$('#all').on('click', function() {
-    // clear layers
-    selectionLayer.getFeatures().clear();
-    tracksLayer.getFeatures().clear();
-    //
+function getParamString() {
+    // get the param string without a selection geometry
     var params = {
 	low_pressure: getLowPressure(),
 	high_pressure: getHighPressure(),
 	start_date: formatDateParam(getStartDate()),
 	end_date: formatDateParam(getEndDate()),
     };
-    var paramString = $.param(params);
+    return $.param(params);
+}
+
+function createDownloadLink(baseUrl, paramString) {
+    // generate a CSV URL for this query
+    var csv_url = baseUrl + '?' + paramString;
+    // and populate the link interface
+    $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
+}
+
+// non-geospatial search
+$('#searchButton').on('click', function() {
+    // clear layers
+    selectionLayer.getFeatures().clear();
+    tracksLayer.getFeatures().clear();
+    //
+    var paramString = getParamString();
     $.getJSON('/query_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) {
 	    console.log('drawing track '+float_id);
 	    draw_track(float_id, tracksLayer);
 	});
     });
-    // generate a CSV URL for this query
-    var csv_url = '/query.csv?' + paramString;
-    // and populate the link interface
-    $('#download').empty().html('<a href="'+csv_url+'">Download CSV</a>');
+    createDownloadLink('/query.csv', paramString);
 });
 
 // pressure slider
@@ -96,19 +102,23 @@ $('#pressureSlider').rangeSlider({
     bounds: {
 	min: 0,
 	max: 9999
-    },
-    defaultValues: {
+    }, defaultValues: {
 	min: 1000,
 	max: 9999
     }
+}).bind('valuesChanged', function() {
+    var paramString = getParamString();
+    createDownloadLink('/query.csv', paramString);
 });
 $('#dateSlider').dateRangeSlider({
     bounds: {
 	min: new Date(1972,8,28),
 	max: new Date()
-    },
-    defaultValues: {
+    }, defaultValues: {
 	min: new Date(1980,0,1),
 	max: new Date(2015,0,1)
     }
+}).bind('valuesChanged', function() {
+    var paramString = getParamString();
+    createDownloadLink('/query.csv', paramString);
 });
