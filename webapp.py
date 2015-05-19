@@ -3,7 +3,7 @@ import json
 from flask import Flask, Response, request, redirect, url_for
 from flask import render_template
 
-from query import query_data, query_geom_data, query_floats, query_geom_floats, get_track, get_metadata, METADATA_COLS
+from query import query_data, query_geom_data, query_floats, all_floats, query_geom_floats, get_track, get_metadata, METADATA_COLS
 from query import choose_random_float
 
 app = Flask(__name__)
@@ -36,24 +36,31 @@ def serve_floats_json():
     float_ids = query_floats(left, bottom, right, top, low_pressure, high_pressure)
     return Response(json.dumps(float_ids),mimetype='application/json')
 
+@app.route('/all_floats.json')
+def all_floats_json():
+    float_ids = all_floats()
+    return Response(json.dumps(float_ids),mimetype='application/json')
+
 def get_geom_request_args():
     low_pressure = request.args.get('low_pressure',0)
     high_pressure = request.args.get('high_pressure',9999)
+    start_date = request.args.get('start_date','1972-09-28')
+    end_date = request.args.get('end_date','2015-01-01')
     geom = request.args.get('geometry',None)
-    return geom, low_pressure, high_pressure
+    return geom, low_pressure, high_pressure, start_date, end_date
 
 @app.route('/query_geom.csv')
 def serve_query_geom_csv():
-    geom, low_pressure, high_pressure = get_geom_request_args()
+    geom, low_pressure, high_pressure, start_date, end_date = get_geom_request_args()
     def line_generator():
-        for line in query_geom_data(geom, low_pressure, high_pressure):
+        for line in query_geom_data(geom, low_pressure, high_pressure, start_date, end_date):
             yield line + '\n'
     return Response(line_generator(),mimetype='text/csv')
 
 @app.route('/query_geom_floats.json')
 def serve_geom_floats_json():
-    geom, low_pressure, high_pressure = get_geom_request_args()
-    float_ids = query_geom_floats(geom,low_pressure,high_pressure)
+    geom, low_pressure, high_pressure, start_date, end_date = get_geom_request_args()
+    float_ids = query_geom_floats(geom,low_pressure,high_pressure,start_date,end_date)
     return Response(json.dumps(float_ids),mimetype='application/json')
 
 @app.route('/track/<int:float_id>')
@@ -84,4 +91,4 @@ def random_float_page():
     return redirect(url_for('float_page',float_id=float_id))
 
 if __name__=='__main__':
-    app.run(host='0.0.0.0',port=8080,debug=True,processes=6)
+    app.run(host='0.0.0.0',port=8080,debug=True,processes=12)

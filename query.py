@@ -15,7 +15,7 @@ METADATA_COLS='ID,PRINCIPAL_INVESTIGATOR,ORGANIZATION,EXPERIMENT,1st_DATE,1st_LA
 DATA_SEPARATOR=r'\s+'
 METADATA_SEPARATOR=r'(?:\b|\))(?:\s*\t+\s*|\s\s)(?=[-0-9a-zA-Z])'
 
-def query_geom_data(geom,low_pressure=0,high_pressure=9999):
+def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date='1972-09-28',end_date='2015-01-01'):
     """
     Return all floats data in CSV format for any float which
     intersects the given WKT geometry and pressure range
@@ -25,7 +25,9 @@ def query_geom_data(geom,low_pressure=0,high_pressure=9999):
         for p in session.query(Point).join(Float).\
             filter(func.ST_Intersects(Float.track, geom)).\
             filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure))):
+                                         Point.pressure < high_pressure,
+                                         Point.date >= start_date,
+                                         Point.date <= end_date))):
             yield '%ld,%s,%s,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d' % (
                 p.float_id,
                 render_date(p.date),
@@ -72,7 +74,7 @@ def query_floats(left=-180,bottom=-90,right=180,top=90,low_pressure=0,high_press
                                          Point.pressure < high_pressure)))]
     return float_ids
 
-def query_geom_floats(geom,low_pressure=0,high_pressure=9999):
+def query_geom_floats(geom,low_pressure=0,high_pressure=9999,start_date='1972-09-28',end_date='2015-01-01'):
     """
     Return the IDs of all floats that intersect the given WKT geometry
     and pressure range.
@@ -81,7 +83,14 @@ def query_geom_floats(geom,low_pressure=0,high_pressure=9999):
         float_ids = [f.id for f in session.query(Float).\
             filter(func.ST_Intersects(Float.track, geom)).\
             filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure)))]
+                                         Point.pressure < high_pressure,
+                                         Point.date >= start_date,
+                                         Point.date <= end_date)))]
+    return float_ids
+
+def all_floats():
+    with xa(DATABASE_URL) as session:
+        float_ids = [f.id for f in session.query(Float)]
     return float_ids
 
 def get_metadata(float_id):

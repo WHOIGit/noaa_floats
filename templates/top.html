@@ -11,10 +11,10 @@
 {% endblock %}
 {% block body %}
     <h2>Float data subsetting tool</h2>
-    <div id="help">Enter low and high pressures (mbar), Shift-drag to select search polygon</div>
-    <div id="pressure">
-      Pressure: Low <input id="low_pressure" type="text" value="0"> High <input id="high_pressure" type="text" value="9999">
-    </div>
+    <div id="help">Set low and high pressures (mbar), start and end dates, shift-drag to select search polygon</div>
+    <div id="pressureSlider"></div>
+    <div id="dateSlider"></div>
+    <div id="all">Show all</div>
     <div id="download"></div>
     <div id="map" class="map"></div>
     <script src="{{ url_for('static', filename='index.js') }}" type="text/javascript"></script>
