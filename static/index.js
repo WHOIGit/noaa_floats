@@ -101,10 +101,10 @@ $('#searchButton').on('click', function() {
 $('#pressureSlider').rangeSlider({
     bounds: {
 	min: 0,
-	max: 9999
+	max: 5000
     }, defaultValues: {
 	min: 1000,
-	max: 9999
+	max: 4000
     }
 }).bind('valuesChanged', function() {
     var paramString = getParamString();
