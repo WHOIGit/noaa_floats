@@ -1,6 +1,14 @@
 // using functions from floats.js
 var map = create_map('map');
 
+var rasterLayer = new ol.layer.Image({
+    source: new ol.source.ImageStatic({
+	url: 'static/world.png',
+	imageExtent: [-20037508.34,-20037508.34,20037508.34,20037508.34]
+    })
+});
+map.addLayer(rasterLayer);
+
 // create layer for tracks
 var tracksLayer = create_overlay(map, '#ffcc33');
 

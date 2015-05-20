@@ -23,5 +23,7 @@ sudo -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_top
 sudo service postgresql restart
 # geoalchemy2
 sudo pip install geoalchemy2
+# mapnik
+sudo apt-get install python-mapnik libmapnik-dev
 SHELL
 end
