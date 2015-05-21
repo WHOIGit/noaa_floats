@@ -84,25 +84,29 @@ def etl_tracks():
         n = 0
         # for each float, construct a WKT LINESTRING geometry
         for f in session.query(Float).order_by(Float.id):
-            lon_adj = 0
             prev_lon = 0
+            ls = []
             ps = []
+            np = 0
             # for all the points in this float's track:
             for p in f.points:
                 if p.lon != -999 and p.lat != -99: # exclude noninformative points
+                    np += 1
                     lat, lon = float(p.lat), float(p.lon)
                     # what if float just crossed the int'l date line
-                    if prev_lon < -90 and lon > 90: # going west?
-                        lon_adj -= 360
-                    elif prev_lon > 90 and lon < -90: # going east?
-                        lon_adj += 360
-                    ps.append('%.6f %.6f' % (lon + lon_adj, lat))
+                    if (prev_lon < -90 and lon > 90) or (prev_lon > 90 and lon < -90):
+                        if len(ps)==1:
+                            ps = ps + ps
+                        ls += [ps]
+                        ps = []
+                    ps.append('%.6f %.6f' % (lon, lat))
                     prev_lon = lon
             if len(ps) == 1: # need more than one point
                 ps = ps + ps
+            ls += [ps]
             # format in WKT
-            ls = 'LINESTRING(%s)' % (','.join(ps))
-            print '%d: Float %ld %d points' % (n, f.id, len(ps))
+            ls = 'MULTILINESTRING(%s)' % ','.join(['(%s)' % ','.join(ps) for ps in ls])
+            print '%d: Float %ld %d points' % (n, f.id, np)
             f.track = ls
             n += 1
             if n % 100 == 0: # commit occasionally
