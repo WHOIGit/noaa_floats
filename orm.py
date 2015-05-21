@@ -28,7 +28,7 @@ class Float(Base):
     end_lon = Column(Numeric) # END_LON
     type = Column(String) # TYPE
     filename = Column(String) # FILENAME
-    track = Column(Geometry('LINESTRING')) # track geometry
+    track = Column(Geometry('MULTILINESTRING')) # track geometry
 
     def __repr__(self):
         return '<Float #%d>' % (self.id)
