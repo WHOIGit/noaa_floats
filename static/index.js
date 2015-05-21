@@ -36,14 +36,9 @@ dragPolygon.on('drawend', function(e) {
 	defaultDataProjection: 'ESPG:3857'
     });
     var wkt = format.writeFeature(feature);
-    // add pressure parameters to geometry parameter
-    var params = {
-	low_pressure: getLowPressure(),
-	high_pressure: getHighPressure(),
-	start_date: formatDateParam(getStartDate()),
-	end_date: formatDateParam(getEndDate()),
-	geometry: wkt
-    };
+    // add geometry parameter to other query params
+    var params = getParams();
+    params.geometry = wkt;
     var paramString = $.param(params);
     // query for floats
     $.getJSON('/query_geom_floats.json?' + paramString, function(r) {
@@ -70,16 +65,30 @@ function getEndDate() {
 function formatDateParam(dp) {
     return dp.toISOString().substring(0,10);
 }
+function getExperiment() {
+    var val = $('#experimentMenu').data('value');
+    if(val=='(any)') {
+	return null;
+    } else {
+	return val;
+    }
+}
 
-function getParamString() {
-    // get the param string without a selection geometry
+function getParams() {
     var params = {
 	low_pressure: getLowPressure(),
 	high_pressure: getHighPressure(),
 	start_date: formatDateParam(getStartDate()),
 	end_date: formatDateParam(getEndDate()),
     };
-    return $.param(params);
+    var	experiment = getExperiment();
+    if(experiment!=null) {
+	params.experiment = experiment;
+    }
+    return params;
+}
+function getParamString() {
+    return $.param(getParams());
 }
 
 function createDownloadLink(baseUrl, paramString) {
@@ -90,12 +99,13 @@ function createDownloadLink(baseUrl, paramString) {
 }
 
 // non-geospatial search
-$('#searchButton').on('click', function() {
+$('#searchButton').button().on('click', function() {
     // clear layers
     selectionLayer.getFeatures().clear();
     tracksLayer.getFeatures().clear();
     //
-    var paramString = getParamString();
+    var params = getParams();
+    var paramString = $.param(params);
     $.getJSON('/query_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) {
 	    console.log('drawing track '+float_id);
@@ -129,4 +139,21 @@ $('#dateSlider').dateRangeSlider({
 }).bind('valuesChanged', function() {
     var paramString = getParamString();
     createDownloadLink('/query.csv', paramString);
+});
+
+// experiment selector
+$('#experimentMenu').selectmenu({
+    style:'dropdown',
+    width: 300,
+    select: function(event, ui) {
+	$('#experimentMenu').data('value',ui.item.value);
+	console.log(ui.item.value);
+    }
+}).data('value','(any)');
+$.getJSON('/all_experiments.json', function(r) {
+    $('<option value="(any)">(any)</option>').appendTo('#experimentMenu');
+    $.each(r, function(index, value) {
+	$('<option value="'+value+'">'+value+'</option>').appendTo('#experimentMenu')
+    });
+    $('#experimentMenu').selectmenu('refresh');
 });

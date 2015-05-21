@@ -35,32 +35,40 @@ def point2csv(p):
         p.q_vel,
         p.q_temp)
 
-def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
+def filter_by_params(q,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE,experiment=None):
+    if experiment is not None:
+        q = q.filter(Float.experiment==experiment)
+    q = q.filter(Float.points.any(and_(Point.pressure > low_pressure,
+                                       Point.pressure < high_pressure,
+                                       Point.date >= start_date,
+                                       Point.date <= end_date)))
+    return q
+
+def filter_by_geom(q,geom):
+    return q.filter(func.ST_Intersects(Float.track, geom))
+
+def query_geom_data(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE,experiment=None):
     """
     Return all floats data in CSV format for any float which
     intersects the given WKT geometry and pressure range
     """
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
-        for p in session.query(Point).join(Float).\
-            filter(func.ST_Intersects(Float.track, geom)).\
-            filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure,
-                                         Point.date >= start_date,
-                                         Point.date <= end_date))):
+        q = session.query(Point).join(Float)
+        q = filter_by_params(q,low_pressure,high_pressure,start_date,end_date,experiment)
+        q = filter_by_geom(q,geom)
+        for p in q:
             yield point2csv(p)
 
-def query_data(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
+def query_data(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE,experiment=None):
     """
     Return all floats data in CSV format for any float which matches
     """
     yield ','.join(DATA_COLS)
     with xa(DATABASE_URL) as session:
-        for p in session.query(Point).join(Float).\
-            filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure,
-                                         Point.date >= start_date,
-                                         Point.date <= end_date))):
+        q = session.query(Point).join(Float)
+        q = filter_by_params(q,low_pressure,high_pressure,start_date,end_date,experiment)
+        for p in q:
             yield point2csv(p)
 
 def get_track(float_id):
@@ -72,31 +80,27 @@ def get_track(float_id):
             return f[0]
     return 'LINESTRING(0 0,0 0)' # dummy geometry if float is not found
 
-def query_floats(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
+def query_floats(low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE,experiment=None):
     """
     Return the IDs of all floats that intersect the given bounding box
     and pressure range.
     """
     with xa(DATABASE_URL) as session:
-        float_ids = [f.id for f in session.query(Float).\
-            filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure,
-                                         Point.date >= start_date,
-                                         Point.date <= end_date)))]
+        q = session.query(Float)
+        q = filter_by_params(q,low_pressure,high_pressure,start_date,end_date,experiment)
+        float_ids = [f.id for f in q]
     return float_ids
 
-def query_geom_floats(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE):
+def query_geom_floats(geom,low_pressure=0,high_pressure=9999,start_date=DEFAULT_START_DATE,end_date=DEFAULT_END_DATE,experiment=None):
     """
     Return the IDs of all floats that intersect the given WKT geometry
     and pressure range.
     """
     with xa(DATABASE_URL) as session:
-        float_ids = [f.id for f in session.query(Float).\
-            filter(func.ST_Intersects(Float.track, geom)).\
-            filter(Float.points.any(and_(Point.pressure > low_pressure,
-                                         Point.pressure < high_pressure,
-                                         Point.date >= start_date,
-                                         Point.date <= end_date)))]
+        q = session.query(Float)
+        q = filter_by_params(q,low_pressure,high_pressure,start_date,end_date,experiment)
+        q = filter_by_geom(q,geom)
+        float_ids = [f.id for f in q]
     return float_ids
 
 def all_floats():
@@ -112,6 +116,12 @@ def get_metadata(float_id):
         for f in session.query(Float).filter(Float.id==float_id):
             return f.get_metadata()
     return {}
+
+def all_experiments():
+    with xa(DATABASE_URL) as session:
+        return [_ for _ in session.query(Float.experiment).\
+                    order_by(Float.experiment).\
+                    distinct()]
 
 # debug utilities
 
