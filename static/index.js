@@ -44,7 +44,6 @@ dragPolygon.on('drawend', function(e) {
     $.getJSON('/query_geom_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) { // for each float
 	    // draw its track
-	    console.log('drawing track '+float_id);
 	    draw_track(float_id, tracksLayer);
 	});
     });
@@ -108,7 +107,6 @@ $('#searchButton').button().on('click', function() {
     var paramString = $.param(params);
     $.getJSON('/query_floats.json?' + paramString, function(r) {
 	$.each(r, function(ix, float_id) {
-	    console.log('drawing track '+float_id);
 	    draw_track(float_id, tracksLayer);
 	});
     });
@@ -147,7 +145,8 @@ $('#experimentMenu').selectmenu({
     width: 300,
     select: function(event, ui) {
 	$('#experimentMenu').data('value',ui.item.value);
-	console.log(ui.item.value);
+	var paramString = getParamString();
+	createDownloadLink('/query.csv', paramString);
     }
 }).data('value','(any)');
 $.getJSON('/all_experiments.json', function(r) {
